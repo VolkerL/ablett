@@ -1,0 +1,9 @@
+{
+  "name": "flappyabs",
+  "version": "0.1.0",
+  "description": "Flappy Ablett",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
+}
