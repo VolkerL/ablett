@@ -49,10 +49,6 @@ class Mob extends Sprite {
         this.directionalTextures[Direction.LEFT] = textureL;
         this.directionalTextures[Direction.RIGHT] = textureR;
     }
-    move(direction, timeline) {
-        this.texture = this.directionalTextures[direction];
-        move(this, direction, timeline);
-    }
 }
 
 function create() {

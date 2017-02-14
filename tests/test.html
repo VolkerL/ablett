@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Tests</title>
+        <script type="text/javascript" src="/libs/pixi.min.js"></script>
+        <script type="text/javascript" src="/libs/greensock/TweenLite.min.js"></script>
+        <script type="text/javascript" src="/libs/greensock/TimelineLite.min.js"></script>
+        <script type="text/javascript" src="/engine/keyboard.js"></script>
+        <script type="text/javascript" src="/engine/input.js"></script>
+        <script type="text/javascript" src="/engine/core.js"></script>
+        <script type="text/javascript" src="/engine/actions.js"></script>
+
+        <script type="text/javascript" src="test.js"></script>
+
+        <script type="text/javascript" src="movement/outofbounds.js"></script>
+        <script type="text/javascript" src="movement/collide.js"></script>
+    </head>
+
+    <body onload="init()">
+        <h1>Press SPACE to start/reset test</h1>
+        <div style="margin-bottom: 10px;">
+            <div id="suiteC">Suite: <select id="suite"></select></div>
+            <div id="testC">Test case: <select id="test"></select></div>
+
+        </div>
+        <div id="field"></div>
+
+        <script type="text/javascript">
+         let suites = [];
+         let tests = [];
+         let suite = Test.Movement;
+
+         let testReady = false;
+         let testStarted = false;
+         let testDone = false;
+         let test = null;
+         let testRound = 0;
+
+         // logic
+         let field;
+         let resolver;
+         const SPACE = new Key(KeyCode.SPACE).listen();
+         let p1;
+
+         // rendering
+         let renderer;
+         let stage;
+
+         function init() {
+             loop();
+
+             for (let key of Object.keys(Test)) {
+                 let s = Test[key];
+                 suite = suite || s;
+                 suites.push(s);
+             }
+
+             const selS = createSel('suiteC', 'suite', Object.keys(Test));
+             selS.addEventListener('change', (event) => {
+                 loadSuite(Test[event.target.value]);
+             });
+
+
+             loadSuite(suite);
+             loadTest(test);
+         }
+
+         function loop() {
+             requestAnimationFrame(loop);
+
+             // wait till test is ready
+             if (!testReady) return;
+
+             renderer.render(stage);
+
+             // start the test only once
+             if (!testStarted) {
+                 if (SPACE.isDown) {
+                     // start the test
+                     testStarted = true;
+                     nextRound();
+                 }
+             } else if (testDone) {
+                 if (SPACE.isDown) {
+                     test.reset.bind(test.execCtx)();
+                     // need a timeout to allow spacebar to be released
+                     setTimeout(function(){
+                         testStarted = false;
+                         testRound = 0;
+                         testDone = false;
+                     }, 100);
+                 }
+             }
+         }
+
+         function nextRound() {
+             if (test.rounds && test.rounds.length > testRound) {
+                 // run the next round
+                 const timeline = new TimelineLite({paused : true});
+                 // when done with this round, start the next
+                 timeline.eventCallback('onComplete', function() {
+                     testRound++;
+                     nextRound();
+                 });
+                 // start this round
+                 test.rounds[testRound].bind(test.execCtx)(timeline);
+                 // play the animation
+                 timeline.play();
+             } else {
+                 // we are done, allow resetting the test
+                 testDone = true;
+             }
+         }
+
+         function loadSuite(newSuite) {
+             tests = [];
+             suite = newSuite;
+             for (let key of Object.keys(newSuite)) {
+                 let t = newSuite[key];
+                 tests.push(t);
+                 test = test || t;
+             }
+
+             const selT = createSel('testC', 'test', Object.keys(suite));
+             selT.addEventListener('change', function(event) {
+                 loadTest(suite[event.target.value]);
+             });
+         }
+
+         function createSel(containerId, id, opts) {
+             const c = document.getElementById(containerId);
+             let s = document.getElementById(id);
+             c.removeChild(s);
+             s = document.createElement('select');
+             s.setAttribute('id', id);
+             c.appendChild(s);
+             for (let opt of opts) {
+                 addOption(s, opt);
+             }
+             return s;
+         }
+
+         function addOption(sel, val) {
+             const opt = document.createElement('option');
+             opt.setAttribute('value', val);
+             opt.appendChild(document.createTextNode(val));
+             sel.appendChild(opt);
+         }
+
+         function loadTest(newTest) {
+             testReady = false;
+             test = newTest;
+             testStarted = false;
+             testDone = false;
+             testRound = 0;
+
+             // clear the old test
+             document.body.removeChild(document.getElementById('field'));
+             const container = document.createElement('div');
+             container.setAttribute('id', 'field');
+             document.body.appendChild(container);
+
+             // create new logic
+             field = new Field(64, test.fieldWidth, test.fieldHeight);
+             resolver = new RoundResolver(field, test.ticks, test.sPerTick);
+             started = false;
+
+             // create new rendering
+             renderer = PIXI.autoDetectRenderer(field.pxWidth, field.pxHeight);
+             stage = new PIXI.Container();
+
+             document.getElementById('field').appendChild(renderer.view);
+             renderer.backgroundColor = 0x408040;
+             renderer.autoResize = true;
+
+             renderer.render(stage);
+
+             // load assets
+             PIXI.loader.reset();
+             for (let key of Object.keys(test.load)) {
+                 PIXI.loader.add(key, test.load[key]);
+             }
+
+             // create the stage for the test
+             PIXI.loader.load(function() {
+                 test.create.bind(test.execCtx)(field, resolver, renderer, stage);
+
+                 // signal we are ready
+                 testReady = true;
+             });
+         }
+
+        </script>
+    </body>
+</html>

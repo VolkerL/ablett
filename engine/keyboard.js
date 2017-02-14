@@ -16,6 +16,14 @@ const KeyCode  = {
     D : "D".charCodeAt(0)
 };
 
+/**
+   Create a Key object for the key you want to listen to.
+
+   Optionally you can set .press or .release to register callbacks.
+   Alternatively .isDown and .isUp can be used to check the status of the key.
+
+   Call .listen() to start listening.
+ */
 class Key {
     constructor(keyCode) {
         this.code = keyCode;
