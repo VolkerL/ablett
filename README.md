@@ -9,6 +9,15 @@ Hopefully these games will one day be used for
 
 ## Usage
 
+The awesomeness of Github Pages gives us free static hosting.
+So the contents of this repository can be checked at:
+
+- https://volkerl.github.io/ablett/findhorse/ -- for the prototype game
+- https://volkerl.github.io/ablett/tests/test.html -- for the tests
+
+### Running Locally
+If you want to run it locally, please follow these directions:
+
 To run the first prototype or the tests, you need a web server.
 If you have [NodeJS](https://nodejs.org) installed, you can use the server in this rep.
 
@@ -30,7 +39,7 @@ $ node server.js
 Now the prototype game will be available at `http://localhost:3000/finddaisy`.
 For now you can just use the arrow keys to move Ablett around.
 
-### Tests
+#### Running Tests Locally
 
 To try out the tests, start the server as described above.
 Then the tests can be viewed at `http://localhost:3000/tests/test.html`.
